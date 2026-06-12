@@ -16,9 +16,10 @@ const navLinks = [
 
 interface NavbarProps {
   siteName?: string;
+  logoUrl?: string;
 }
 
-export function Navbar({ siteName = "StudioWave" }: NavbarProps) {
+export function Navbar({ siteName = "StudioWave", logoUrl }: NavbarProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -26,12 +27,22 @@ export function Navbar({ siteName = "StudioWave" }: NavbarProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <nav className="mt-4 flex items-center justify-between rounded-2xl border border-white/20 bg-white/70 px-6 py-3 shadow-lg shadow-violet-500/5 backdrop-blur-xl">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-500 shadow-md shadow-violet-500/30">
-              <Sparkles className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-lg font-bold bg-gradient-to-r from-violet-700 to-fuchsia-600 bg-clip-text text-transparent">
-              {siteName}
-            </span>
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={siteName}
+                className="h-9 w-auto object-contain max-h-9 rounded-lg"
+              />
+            ) : (
+              <>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-500 shadow-md shadow-violet-500/30">
+                  <Sparkles className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-lg font-bold bg-gradient-to-r from-violet-700 to-fuchsia-600 bg-clip-text text-transparent">
+                  {siteName}
+                </span>
+              </>
+            )}
           </Link>
 
           <div className="hidden md:flex items-center gap-1">

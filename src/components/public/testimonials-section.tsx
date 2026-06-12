@@ -50,9 +50,17 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
                 &ldquo;{item.content}&rdquo;
               </p>
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-semibold text-sm">
-                  {item.name.charAt(0)}
-                </div>
+                {item.avatar_url ? (
+                  <img
+                    src={item.avatar_url}
+                    alt={item.name}
+                    className="h-10 w-10 rounded-full object-cover border border-violet-100/50"
+                  />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-semibold text-sm">
+                    {item.name.charAt(0)}
+                  </div>
+                )}
                 <div>
                   <p className="font-semibold text-zinc-900 text-sm">
                     {item.name}

@@ -42,9 +42,17 @@ export function PortfolioSection({ items, showAll = false }: PortfolioSectionPro
             >
               <div className="rounded-2xl bg-white border border-zinc-100 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-violet-500/10 transition-all duration-300 hover:-translate-y-1">
                 <div className="aspect-[16/10] bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center relative overflow-hidden">
-                  <span className="text-5xl">
-                    {["🎨", "📱", "📸", "💻"][index % 4]}
-                  </span>
+                  {item.image_url ? (
+                    <img
+                      src={item.image_url}
+                      alt={item.title}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <span className="text-5xl">
+                      {["🎨", "📱", "📸", "💻"][index % 4]}
+                    </span>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-end p-4">
                     <a
                       href={item.project_url}

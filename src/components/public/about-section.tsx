@@ -20,14 +20,22 @@ export function AboutSection({ content }: AboutSectionProps) {
             transition={{ duration: 0.5 }}
             className="relative"
           >
-            <div className="aspect-[4/5] rounded-3xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-7xl mb-4">💡</div>
-                <p className="text-3xl font-bold text-violet-700">
-                  {content.experience_years}+
-                </p>
-                <p className="text-sm text-zinc-500">Tahun Pengalaman</p>
-              </div>
+            <div className="aspect-[4/5] rounded-3xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center overflow-hidden">
+              {content.image_url ? (
+                <img
+                  src={content.image_url}
+                  alt={content.title}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="text-center">
+                  <div className="text-7xl mb-4">💡</div>
+                  <p className="text-3xl font-bold text-violet-700">
+                    {content.experience_years}+
+                  </p>
+                  <p className="text-sm text-zinc-500">Tahun Pengalaman</p>
+                </div>
+              )}
             </div>
             <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-500 opacity-20" />
           </motion.div>

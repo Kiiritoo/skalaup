@@ -22,6 +22,7 @@ export default async function HeroDashboardPage() {
           description: content.hero.description,
           cta_text: content.hero.cta_text,
           cta_link: content.hero.cta_link,
+          image_url: content.hero.image_url || "",
         }}
         fields={[
           { name: "title", label: "Judul Utama", type: "text", placeholder: "Bangun Website Impianmu" },
@@ -29,6 +30,7 @@ export default async function HeroDashboardPage() {
           { name: "description", label: "Deskripsi", type: "textarea", rows: 4 },
           { name: "cta_text", label: "Teks Tombol CTA", type: "text" },
           { name: "cta_link", label: "Link Tombol CTA", type: "text" },
+          { name: "image_url", label: "Gambar Hero", type: "image" },
         ]}
       />
     </>

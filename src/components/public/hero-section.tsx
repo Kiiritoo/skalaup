@@ -87,16 +87,24 @@ export function HeroSection({ content }: HeroSectionProps) {
           >
             <div className="relative aspect-square max-w-lg mx-auto">
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-violet-600 to-fuchsia-500 opacity-10 rotate-6" />
-              <div className="absolute inset-4 rounded-3xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 backdrop-blur-sm border border-white/50 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="text-8xl mb-4">🚀</div>
-                  <p className="text-lg font-semibold text-zinc-700">
-                    Your Digital Presence
-                  </p>
-                  <p className="text-sm text-zinc-500 mt-2">
-                    Starts Here
-                  </p>
-                </div>
+              <div className="absolute inset-4 rounded-3xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 backdrop-blur-sm border border-white/50 flex items-center justify-center overflow-hidden">
+                {content.image_url ? (
+                  <img
+                    src={content.image_url}
+                    alt={content.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="text-center p-8">
+                    <div className="text-8xl mb-4">🚀</div>
+                    <p className="text-lg font-semibold text-zinc-700">
+                      Your Digital Presence
+                    </p>
+                    <p className="text-sm text-zinc-500 mt-2">
+                      Starts Here
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="absolute -top-4 -right-4 px-4 py-2 rounded-2xl bg-white shadow-lg border border-zinc-100 text-sm font-medium text-violet-700 animate-bounce">
                 ✨ Modern Design

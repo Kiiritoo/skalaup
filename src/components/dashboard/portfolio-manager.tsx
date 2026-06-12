@@ -34,6 +34,34 @@ export function PortfolioManager({ initialItems }: PortfolioManagerProps) {
   const [tagsInput, setTagsInput] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error("Gagal mengupload gambar");
+      }
+
+      const result = await res.json();
+      setForm((prev) => ({ ...prev, image_url: result.url }));
+    } catch (err: any) {
+      setErrorMsg(err.message || "Gagal mengupload gambar. Silakan coba lagi.");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   function startEdit(item: PortfolioItem) {
     setEditing(item.id);
@@ -169,6 +197,34 @@ export function PortfolioManager({ initialItems }: PortfolioManagerProps) {
                 rows={3}
               />
             </div>
+            <div className="space-y-2">
+              <Label>Gambar Proyek (Screenshot)</Label>
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-28 rounded-lg bg-zinc-100 border border-zinc-200 overflow-hidden flex items-center justify-center shrink-0">
+                  {form.image_url ? (
+                    <img
+                      src={form.image_url}
+                      alt="Project Screenshot"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-zinc-400 text-[10px] text-center px-1">No Image</span>
+                  )}
+                </div>
+                <div className="flex-1 space-y-1">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
+                    className="max-w-xs"
+                  />
+                  <p className="text-xs text-zinc-400">
+                    {uploading ? "Mengupload..." : "Upload gambar proyek (.png, .jpg, .webp)"}
+                  </p>
+                </div>
+              </div>
+            </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>URL Proyek</Label>
@@ -193,11 +249,11 @@ export function PortfolioManager({ initialItems }: PortfolioManagerProps) {
               <Label>Featured</Label>
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleSave}>
+              <Button onClick={handleSave} disabled={uploading}>
                 <Save className="h-4 w-4" />
-                Simpan
+                {uploading ? "Menyimpan..." : "Simpan"}
               </Button>
-              <Button variant="ghost" onClick={cancel}>
+              <Button variant="ghost" onClick={cancel} disabled={uploading}>
                 <X className="h-4 w-4" />
                 Batal
               </Button>
@@ -211,24 +267,37 @@ export function PortfolioManager({ initialItems }: PortfolioManagerProps) {
           <Card key={item.id}>
             <CardContent className="pt-6">
               <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-zinc-900">{item.title}</h3>
-                    <Badge variant="secondary">{item.category}</Badge>
-                    {item.featured && <Badge>Featured</Badge>}
+                <div className="flex gap-4 flex-1">
+                  <div className="h-16 w-24 rounded-lg bg-zinc-100 border border-zinc-200 overflow-hidden flex items-center justify-center shrink-0">
+                    {item.image_url ? (
+                      <img
+                        src={item.image_url}
+                        alt={item.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-zinc-400 text-xs">No Image</span>
+                    )}
                   </div>
-                  <p className="text-sm text-zinc-500 line-clamp-2">
-                    {item.description}
-                  </p>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {item.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-xs px-2 py-0.5 rounded bg-zinc-100 text-zinc-600"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-zinc-900">{item.title}</h3>
+                      <Badge variant="secondary">{item.category}</Badge>
+                      {item.featured && <Badge>Featured</Badge>}
+                    </div>
+                    <p className="text-sm text-zinc-500 line-clamp-2">
+                      {item.description}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {item.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-xs px-2 py-0.5 rounded bg-zinc-100 text-zinc-600"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-1 shrink-0">

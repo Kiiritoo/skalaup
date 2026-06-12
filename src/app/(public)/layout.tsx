@@ -14,7 +14,7 @@ export default async function PublicLayout({
 
   return (
     <>
-      <Navbar siteName={content.settings.site_name} />
+      <Navbar siteName={content.settings.site_name} logoUrl={content.settings.logo_url} />
       <main className="flex-1">{children}</main>
       <Footer
         siteName={content.settings.site_name}
