@@ -115,9 +115,6 @@ export function Footer({
           <p className="text-sm text-zinc-400">
             &copy; {year} {siteName}. All rights reserved.
           </p>
-          <p className="text-sm text-zinc-400">
-            Dibuat dengan ❤️ menggunakan Next.js & Supabase
-          </p>
         </div>
       </div>
     </footer>
