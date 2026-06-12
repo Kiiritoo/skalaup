@@ -118,16 +118,6 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 p-4 rounded-xl bg-violet-50 border border-violet-100">
-              <p className="text-xs text-violet-600 font-medium mb-1">
-                Demo Credentials
-              </p>
-              <p className="text-xs text-violet-500">
-                Email: admin@demo.com<br />
-                Password: demo123
-              </p>
-            </div>
-
             <p className="text-center text-sm text-zinc-500 mt-6">
               <Link href="/" className="text-violet-600 hover:underline">
                 ← Kembali ke website
