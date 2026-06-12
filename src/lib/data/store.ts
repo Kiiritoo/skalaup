@@ -96,13 +96,20 @@ export async function getSiteContent(): Promise<SiteContent> {
       ]);
 
       return {
-        hero: (hero as any) || defaultSiteContent.hero,
-        about: (about as any) || defaultSiteContent.about,
-        settings: (settings as any) || defaultSiteContent.settings,
-        contact: (contact as any) || defaultSiteContent.contact,
-        services: (services as any[]) || defaultSiteContent.services,
-        testimonials: (testimonials as any[]) || defaultSiteContent.testimonials,
-        portfolio: (portfolio as any[]) || defaultSiteContent.portfolio,
+        hero: (hero as any) ?? defaultSiteContent.hero,
+        about: (about as any) ?? defaultSiteContent.about,
+        settings: (settings as any) ?? defaultSiteContent.settings,
+        contact: (contact as any) ?? defaultSiteContent.contact,
+        // Only fall back to mock data if the table is truly empty (no rows at all)
+        services: (services && services.length > 0)
+          ? (services as any[])
+          : defaultSiteContent.services,
+        testimonials: (testimonials && testimonials.length > 0)
+          ? (testimonials as any[])
+          : defaultSiteContent.testimonials,
+        portfolio: (portfolio && portfolio.length > 0)
+          ? (portfolio as any[])
+          : defaultSiteContent.portfolio,
       };
     } catch (dbError) {
       console.error("Supabase read failed, using local JSON:", dbError);

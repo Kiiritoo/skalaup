@@ -171,17 +171,43 @@ CREATE POLICY "Auth write settings" ON site_settings FOR ALL USING (auth.role() 
 
 -- Insert default data safely (Only if tables are empty)
 INSERT INTO hero_content (title, subtitle, description, cta_text, cta_link)
-SELECT 'Bangun Website Impianmu', 'Platform modern untuk kreator & bisnis', 'Kami membantu kamu membuat website yang keren.', 'Lihat Portofolio', '/portfolio'
+SELECT 'Bangun Website Impianmu', 'Platform modern untuk kreator & bisnis', 'Kami membantu kamu membuat website yang keren, responsif, dan siap bersaing di era digital.', 'Lihat Portofolio', '/portfolio'
 WHERE NOT EXISTS (SELECT 1 FROM hero_content);
 
 INSERT INTO about_content (title, description, skills, experience_years)
-SELECT 'Tentang Kami', 'Tim kreatif yang passionate soal desain dan teknologi.', ARRAY['Web Design', 'UI/UX', 'Development'], 5
+SELECT 'Tentang Kami', 'Kami adalah tim kreatif yang passionate soal desain dan teknologi. Sejak 2020, kami sudah bantu puluhan brand dan kreator punya presence digital yang memorable.', ARRAY['Web Design', 'UI/UX', 'Branding', 'Development', 'SEO'], 5
 WHERE NOT EXISTS (SELECT 1 FROM about_content);
 
-INSERT INTO contact_info (email, phone, address)
-SELECT 'hello@studiowave.id', '+62 812-3456-7890', 'Jakarta, Indonesia'
+INSERT INTO contact_info (email, phone, address, social_instagram, social_linkedin)
+SELECT 'hello@studiowave.id', '+62 812-3456-7890', 'Jakarta, Indonesia', 'https://instagram.com/studiowave', 'https://linkedin.com/company/studiowave'
 WHERE NOT EXISTS (SELECT 1 FROM contact_info);
 
-INSERT INTO site_settings (site_name, site_tagline)
-SELECT 'StudioWave', 'Create. Launch. Grow.'
+INSERT INTO site_settings (site_name, site_tagline, primary_color)
+SELECT 'StudioWave', 'Create. Launch. Grow.', '#7C3AED'
 WHERE NOT EXISTS (SELECT 1 FROM site_settings);
+
+INSERT INTO service_items (title, description, icon, price_starting, price_original, discount_label, discount_expires, featured, "order")
+SELECT * FROM (VALUES
+  ('Website Design', E'Desain website yang eye-catching dan user-friendly.\n- 1-2 Halaman Desain\n- Mockup UI/UX Modern\n- Revisi 3 Kali\n- Aset Grafis & Icon Custom', 'palette', 'Rp 4jt', 'Rp 5jt', '20% OFF', '30 Jun 2026', TRUE, 1),
+  ('Web Development', E'Development full-stack dengan teknologi terkini.\n- Full Responsive Mobile-first\n- CMS & Dashboard Admin\n- Integrasi Database\n- Free Basic SEO Setup', 'code', 'Rp 6,5jt', 'Rp 8jt', 'BEST DEAL', '', TRUE, 2),
+  ('Branding & Identity', E'Bangun identitas brand yang kuat dari logo hingga guidelines.\n- Desain Logo Utama & Alternatif\n- Palet Warna & Tipografi Brand\n- Format File Master Komplit', 'sparkles', 'Rp 3jt', '', '', '', FALSE, 3),
+  ('SEO & Marketing', E'Optimasi website untuk growth yang sustainable.\n- Audit SEO Komprehensif\n- Riset Keyword Kompetitor\n- Laporan Bulanan Performa', 'trending-up', 'Rp 2jt/bulan', '', '', '', FALSE, 4)
+) AS v(title, description, icon, price_starting, price_original, discount_label, discount_expires, featured, ord)
+WHERE NOT EXISTS (SELECT 1 FROM service_items);
+
+INSERT INTO testimonials (name, role, company, content, rating, featured)
+SELECT * FROM (VALUES
+  ('Sarah Wijaya', 'Founder', 'Bloom Cafe', 'Website yang dibuat StudioWave bener-bener ngebantu bisnis kami grow. Desainnya fresh banget dan customernya suka!', 5, TRUE),
+  ('Rizky Pratama', 'CEO', 'FitTrack', 'Timnya responsif, komunikasinya enak, dan hasilnya melebihi ekspektasi. Highly recommended!', 5, TRUE),
+  ('Diana Putri', 'Creative Director', 'Studio Lumière', 'Portfolio website kami jadi lebih professional dan banyak client baru yang datang lewat online.', 4, FALSE)
+) AS v(name, role, company, content, rating, featured)
+WHERE NOT EXISTS (SELECT 1 FROM testimonials);
+
+INSERT INTO portfolio_items (title, description, category, tags, project_url, featured)
+SELECT * FROM (VALUES
+  ('Bloom Cafe', 'Website modern untuk coffee shop dengan online ordering dan menu interaktif.', 'Food & Beverage', ARRAY['Next.js', 'E-commerce', 'UI Design'], '#', TRUE),
+  ('FitTrack App', 'Landing page dan dashboard untuk aplikasi fitness tracking generasi Z.', 'Health & Fitness', ARRAY['React', 'Mobile-first', 'Animation'], '#', TRUE),
+  ('Studio Lumière', 'Portfolio website untuk studio fotografi dengan galeri immersive.', 'Creative', ARRAY['Photography', 'Gallery', 'Minimal'], '#', FALSE),
+  ('TechStart Hub', 'Corporate website untuk startup incubator dengan blog dan event calendar.', 'Technology', ARRAY['CMS', 'Blog', 'Corporate'], '#', FALSE)
+) AS v(title, description, category, tags, project_url, featured)
+WHERE NOT EXISTS (SELECT 1 FROM portfolio_items);
