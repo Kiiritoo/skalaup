@@ -186,6 +186,11 @@ INSERT INTO site_settings (site_name, site_tagline, primary_color)
 SELECT 'StudioWave', 'Create. Launch. Grow.', '#7C3AED'
 WHERE NOT EXISTS (SELECT 1 FROM site_settings);
 
+-- Add discount columns to service_items if they don't exist yet (safe migration)
+ALTER TABLE service_items ADD COLUMN IF NOT EXISTS price_original TEXT DEFAULT '';
+ALTER TABLE service_items ADD COLUMN IF NOT EXISTS discount_label TEXT DEFAULT '';
+ALTER TABLE service_items ADD COLUMN IF NOT EXISTS discount_expires TEXT DEFAULT '';
+
 INSERT INTO service_items (title, description, icon, price_starting, price_original, discount_label, discount_expires, featured, "order")
 SELECT * FROM (VALUES
   ('Website Design', E'Desain website yang eye-catching dan user-friendly.\n- 1-2 Halaman Desain\n- Mockup UI/UX Modern\n- Revisi 3 Kali\n- Aset Grafis & Icon Custom', 'palette', 'Rp 4jt', 'Rp 5jt', '20% OFF', '30 Jun 2026', TRUE, 1),
