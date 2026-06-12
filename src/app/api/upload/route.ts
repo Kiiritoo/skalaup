@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -15,56 +15,32 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Sanitize filename
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const filename = `${Date.now()}-${safeName}`;
 
-    // 1. Try Supabase Storage
-    try {
-      const supabase = await createServerSupabaseClient();
-      if (supabase) {
-        const { data, error } = await supabase.storage
-          .from("uploads")
+    // 1. Try Supabase Storage via admin client (bypasses bucket RLS)
+    const admin = createAdminSupabaseClient();
+    if (admin) {
+      // Try 'uploads' bucket first, then 'testimonials' as legacy fallback
+      for (const bucket of ["uploads", "testimonials"]) {
+        const { data, error } = await admin.storage
+          .from(bucket)
           .upload(filename, buffer, {
             contentType: file.type,
             upsert: false,
           } as any);
 
         if (!error && data) {
-          const { data: urlData } = supabase.storage
-            .from("uploads")
-            .getPublicUrl(filename);
-
+          const { data: urlData } = admin.storage.from(bucket).getPublicUrl(filename);
           if (urlData?.publicUrl) {
-            return NextResponse.json({ url: urlData.publicUrl, source: "supabase" });
+            return NextResponse.json({ url: urlData.publicUrl, source: "supabase", bucket });
           }
         }
-
-        // Try the 'testimonials' bucket as fallback bucket name
-        const { data: data2, error: error2 } = await supabase.storage
-          .from("testimonials")
-          .upload(filename, buffer, {
-            contentType: file.type,
-            upsert: false,
-          } as any);
-
-        if (!error2 && data2) {
-          const { data: urlData2 } = supabase.storage
-            .from("testimonials")
-            .getPublicUrl(filename);
-
-          if (urlData2?.publicUrl) {
-            return NextResponse.json({ url: urlData2.publicUrl, source: "supabase" });
-          }
-        }
-
-        console.warn("Supabase upload failed:", error?.message || error2?.message);
+        console.warn(`Supabase bucket "${bucket}" upload failed:`, error?.message);
       }
-    } catch (sbErr) {
-      console.warn("Supabase upload exception:", sbErr);
     }
 
-    // 2. Local dev fallback — only works outside Vercel
+    // 2. Local dev fallback — only in non-Vercel environments
     if (process.env.VERCEL !== "1") {
       try {
         const { writeFile, mkdir } = await import("fs/promises");
@@ -78,20 +54,16 @@ export async function POST(request: Request) {
       }
     }
 
-    // 3. On Vercel with no Supabase bucket configured — return clear error
     return NextResponse.json(
       {
         error:
-          "Upload failed: Supabase Storage is not configured or the bucket does not exist. " +
-          "Please create a public bucket named 'uploads' in your Supabase project.",
+          "Upload failed: Please create a public Supabase Storage bucket named 'uploads' " +
+          "and add SUPABASE_SERVICE_ROLE_KEY to your environment variables.",
       },
       { status: 503 }
     );
   } catch (error: any) {
     console.error("Upload route error:", error);
-    return NextResponse.json(
-      { error: error.message || "Upload failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message || "Upload failed" }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@ import { readFile, writeFile, access, mkdir } from "fs/promises";
 import { join } from "path";
 import { defaultSiteContent } from "./mock-data";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type {
   SiteContent,
   PortfolioItem,
@@ -18,15 +19,23 @@ const DATA_DIR = join(process.cwd(), "data");
 const DATA_FILE = join(DATA_DIR, "site-content.json");
 const MESSAGES_FILE = join(DATA_DIR, "messages.json");
 
-// Helper to safely get Supabase client
-async function getSupabase() {
+// ─── Supabase helpers ─────────────────────────────────────────────────────────
+
+/** Read client — anon key, respects RLS public-read policies */
+async function getReadClient() {
   try {
     return await createServerSupabaseClient();
-  } catch (err) {
-    console.warn("Supabase client instantiation failed (likely static build), falling back to local:", err);
+  } catch {
     return null;
   }
 }
+
+/** Write client — service role key, bypasses RLS entirely */
+function getWriteClient() {
+  return createAdminSupabaseClient();
+}
+
+// ─── Local JSON helpers (dev fallback) ────────────────────────────────────────
 
 async function ensureDataDir() {
   try {
@@ -41,7 +50,6 @@ async function readJson<T>(file: string, fallback: T): Promise<T> {
     const raw = await readFile(file, "utf-8");
     return JSON.parse(raw) as T;
   } catch {
-    // Only attempt to write fallback file locally if not in Vercel serverless environment
     if (process.env.VERCEL !== "1") {
       try {
         await ensureDataDir();
@@ -56,15 +64,17 @@ async function readJson<T>(file: string, fallback: T): Promise<T> {
 
 async function writeJson<T>(file: string, data: T) {
   if (process.env.VERCEL === "1") {
-    console.warn("Skipping local file write on Vercel read-only environment");
+    console.warn("Skipping local file write on Vercel (read-only filesystem)");
     return;
   }
   await ensureDataDir();
   await writeFile(file, JSON.stringify(data, null, 2));
 }
 
+// ─── Site Content (full) ──────────────────────────────────────────────────────
+
 export async function getSiteContent(): Promise<SiteContent> {
-  const supabase = await getSupabase();
+  const supabase = await getReadClient();
   if (supabase) {
     try {
       const [
@@ -95,130 +105,146 @@ export async function getSiteContent(): Promise<SiteContent> {
         portfolio: (portfolio as any[]) || defaultSiteContent.portfolio,
       };
     } catch (dbError) {
-      console.error("Supabase select query failed, falling back to local JSON database:", dbError);
+      console.error("Supabase read failed, using local JSON:", dbError);
     }
   }
-
   return readJson<SiteContent>(DATA_FILE, defaultSiteContent);
 }
 
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+
 export async function updateHero(data: Partial<HeroContent>) {
-  const supabase = await getSupabase();
-  if (supabase) {
-    const { data: hero } = await supabase.from("hero_content").select("id").maybeSingle();
-    if (hero?.id) {
-      const { data: updated } = await supabase
+  const admin = getWriteClient();
+  if (admin) {
+    const { data: existing } = await admin.from("hero_content").select("id").maybeSingle();
+    if (existing?.id) {
+      const { data: updated, error } = await admin
         .from("hero_content")
         .update({ ...data, updated_at: new Date().toISOString() })
-        .eq("id", hero.id)
+        .eq("id", existing.id)
         .select()
         .single();
+      if (error) throw new Error(error.message);
       return updated;
     } else {
-      const { data: inserted } = await supabase
+      const { data: inserted, error } = await admin
         .from("hero_content")
         .insert({ ...data, updated_at: new Date().toISOString() })
         .select()
         .single();
+      if (error) throw new Error(error.message);
       return inserted;
     }
   }
-
   const content = await getSiteContent();
   content.hero = { ...content.hero, ...data, updated_at: new Date().toISOString() };
   await writeJson(DATA_FILE, content);
   return content.hero;
 }
 
+// ─── About ────────────────────────────────────────────────────────────────────
+
 export async function updateAbout(data: Partial<AboutContent>) {
-  const supabase = await getSupabase();
-  if (supabase) {
-    const { data: about } = await supabase.from("about_content").select("id").maybeSingle();
-    if (about?.id) {
-      const { data: updated } = await supabase
+  const admin = getWriteClient();
+  if (admin) {
+    const { data: existing } = await admin.from("about_content").select("id").maybeSingle();
+    if (existing?.id) {
+      const { data: updated, error } = await admin
         .from("about_content")
         .update({ ...data, updated_at: new Date().toISOString() })
-        .eq("id", about.id)
+        .eq("id", existing.id)
         .select()
         .single();
+      if (error) throw new Error(error.message);
       return updated;
     } else {
-      const { data: inserted } = await supabase
+      const { data: inserted, error } = await admin
         .from("about_content")
         .insert({ ...data, updated_at: new Date().toISOString() })
         .select()
         .single();
+      if (error) throw new Error(error.message);
       return inserted;
     }
   }
-
   const content = await getSiteContent();
   content.about = { ...content.about, ...data, updated_at: new Date().toISOString() };
   await writeJson(DATA_FILE, content);
   return content.about;
 }
 
+// ─── Contact ──────────────────────────────────────────────────────────────────
+
 export async function updateContact(data: Partial<ContactInfo>) {
-  const supabase = await getSupabase();
-  if (supabase) {
-    const { data: contact } = await supabase.from("contact_info").select("id").maybeSingle();
-    if (contact?.id) {
-      const { data: updated } = await supabase
+  const admin = getWriteClient();
+  if (admin) {
+    const { data: existing } = await admin.from("contact_info").select("id").maybeSingle();
+    if (existing?.id) {
+      const { data: updated, error } = await admin
         .from("contact_info")
         .update({ ...data, updated_at: new Date().toISOString() })
-        .eq("id", contact.id)
+        .eq("id", existing.id)
         .select()
         .single();
+      if (error) throw new Error(error.message);
       return updated;
     } else {
-      const { data: inserted } = await supabase
+      const { data: inserted, error } = await admin
         .from("contact_info")
         .insert({ ...data, updated_at: new Date().toISOString() })
         .select()
         .single();
+      if (error) throw new Error(error.message);
       return inserted;
     }
   }
-
   const content = await getSiteContent();
   content.contact = { ...content.contact, ...data, updated_at: new Date().toISOString() };
   await writeJson(DATA_FILE, content);
   return content.contact;
 }
 
+// ─── Settings ─────────────────────────────────────────────────────────────────
+
 export async function updateSettings(data: Partial<SiteSettings>) {
-  const supabase = await getSupabase();
-  if (supabase) {
-    const { data: settings } = await supabase.from("site_settings").select("id").maybeSingle();
-    if (settings?.id) {
-      const { data: updated } = await supabase
+  const admin = getWriteClient();
+  if (admin) {
+    const { data: existing } = await admin.from("site_settings").select("id").maybeSingle();
+    if (existing?.id) {
+      const { data: updated, error } = await admin
         .from("site_settings")
         .update({ ...data, updated_at: new Date().toISOString() })
-        .eq("id", settings.id)
+        .eq("id", existing.id)
         .select()
         .single();
+      if (error) throw new Error(error.message);
       return updated;
     } else {
-      const { data: inserted } = await supabase
+      const { data: inserted, error } = await admin
         .from("site_settings")
         .insert({ ...data, updated_at: new Date().toISOString() })
         .select()
         .single();
+      if (error) throw new Error(error.message);
       return inserted;
     }
   }
-
   const content = await getSiteContent();
   content.settings = { ...content.settings, ...data, updated_at: new Date().toISOString() };
   await writeJson(DATA_FILE, content);
   return content.settings;
 }
 
+// ─── Portfolio ────────────────────────────────────────────────────────────────
+
 export async function getPortfolio(): Promise<PortfolioItem[]> {
-  const supabase = await getSupabase();
+  const supabase = await getReadClient();
   if (supabase) {
-    const { data } = await supabase.from("portfolio_items").select("*").order("created_at", { ascending: false });
-    return data || [];
+    const { data } = await supabase
+      .from("portfolio_items")
+      .select("*")
+      .order("created_at", { ascending: false });
+    return (data as any[]) || [];
   }
   return (await getSiteContent()).portfolio;
 }
@@ -226,12 +252,16 @@ export async function getPortfolio(): Promise<PortfolioItem[]> {
 export async function addPortfolioItem(
   item: Omit<PortfolioItem, "id" | "created_at" | "updated_at">
 ) {
-  const supabase = await getSupabase();
-  if (supabase) {
-    const { data } = await supabase.from("portfolio_items").insert(item).select().single();
+  const admin = getWriteClient();
+  if (admin) {
+    const { data, error } = await admin
+      .from("portfolio_items")
+      .insert(item)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
     return data;
   }
-
   const content = await getSiteContent();
   const newItem: PortfolioItem = {
     ...item,
@@ -244,21 +274,18 @@ export async function addPortfolioItem(
   return newItem;
 }
 
-export async function updatePortfolioItem(
-  id: string,
-  data: Partial<PortfolioItem>
-) {
-  const supabase = await getSupabase();
-  if (supabase) {
-    const { data: updated } = await supabase
+export async function updatePortfolioItem(id: string, data: Partial<PortfolioItem>) {
+  const admin = getWriteClient();
+  if (admin) {
+    const { data: updated, error } = await admin
       .from("portfolio_items")
       .update({ ...data, updated_at: new Date().toISOString() })
       .eq("id", id)
       .select()
       .single();
+    if (error) throw new Error(error.message);
     return updated;
   }
-
   const content = await getSiteContent();
   const index = content.portfolio.findIndex((p) => p.id === id);
   if (index === -1) return null;
@@ -272,77 +299,208 @@ export async function updatePortfolioItem(
 }
 
 export async function deletePortfolioItem(id: string) {
-  const supabase = await getSupabase();
-  if (supabase) {
-    await supabase.from("portfolio_items").delete().eq("id", id);
+  const admin = getWriteClient();
+  if (admin) {
+    const { error } = await admin.from("portfolio_items").delete().eq("id", id);
+    if (error) throw new Error(error.message);
     return;
   }
-
   const content = await getSiteContent();
   content.portfolio = content.portfolio.filter((p) => p.id !== id);
   await writeJson(DATA_FILE, content);
 }
 
+// ─── Services ─────────────────────────────────────────────────────────────────
+
 export async function getServices(): Promise<ServiceItem[]> {
-  const supabase = await getSupabase();
+  const supabase = await getReadClient();
   if (supabase) {
-    const { data } = await supabase.from("service_items").select("*").order("order", { ascending: true });
-    return data || [];
+    const { data } = await supabase
+      .from("service_items")
+      .select("*")
+      .order("order", { ascending: true });
+    return (data as any[]) || [];
   }
   return (await getSiteContent()).services;
 }
 
+export async function addServiceItem(
+  item: Omit<ServiceItem, "id">
+) {
+  const admin = getWriteClient();
+  if (admin) {
+    const { data, error } = await admin
+      .from("service_items")
+      .insert(item)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return data;
+  }
+  const content = await getSiteContent();
+  const newItem: ServiceItem = { ...item, id: `svc-${Date.now()}` };
+  content.services.push(newItem);
+  await writeJson(DATA_FILE, content);
+  return newItem;
+}
+
+export async function updateServiceItem(id: string, data: Partial<ServiceItem>) {
+  const admin = getWriteClient();
+  if (admin) {
+    const { data: updated, error } = await admin
+      .from("service_items")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return updated;
+  }
+  const content = await getSiteContent();
+  const index = content.services.findIndex((s) => s.id === id);
+  if (index === -1) return null;
+  content.services[index] = { ...content.services[index], ...data };
+  await writeJson(DATA_FILE, content);
+  return content.services[index];
+}
+
+export async function deleteServiceItem(id: string) {
+  const admin = getWriteClient();
+  if (admin) {
+    const { error } = await admin.from("service_items").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+    return;
+  }
+  const content = await getSiteContent();
+  content.services = content.services.filter((s) => s.id !== id);
+  await writeJson(DATA_FILE, content);
+}
+
+// Keep batch-update for backward compat with existing services-manager
 export async function updateServices(services: ServiceItem[]) {
-  const supabase = await getSupabase();
-  if (supabase) {
-    // Delete existing service items and insert updated array
-    await supabase.from("service_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    const formatted = services.map(({ id, ...rest }) => {
+  const admin = getWriteClient();
+  if (admin) {
+    // Upsert: insert new rows, update existing ones (by id)
+    const rows = services.map(({ id, ...rest }) => {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
-      return isUuid ? { id, ...rest } : rest;
+      return isUuid ? { id, ...rest } : { ...rest };
     });
-    const { data } = await supabase.from("service_items").insert(formatted).select();
+    // Delete all then re-insert (safest for full replace)
+    const { error: delError } = await admin
+      .from("service_items")
+      .delete()
+      .neq("id", "00000000-0000-0000-0000-000000000000");
+    if (delError) throw new Error(delError.message);
+    const { data, error: insError } = await admin
+      .from("service_items")
+      .insert(rows)
+      .select();
+    if (insError) throw new Error(insError.message);
     return (data as any) || services;
   }
-
   const content = await getSiteContent();
   content.services = services;
   await writeJson(DATA_FILE, content);
   return services;
 }
 
+// ─── Testimonials ─────────────────────────────────────────────────────────────
+
 export async function getTestimonials(): Promise<Testimonial[]> {
-  const supabase = await getSupabase();
+  const supabase = await getReadClient();
   if (supabase) {
     const { data } = await supabase.from("testimonials").select("*");
-    return data || [];
+    return (data as any[]) || [];
   }
   return (await getSiteContent()).testimonials;
 }
 
+export async function addTestimonial(item: Omit<Testimonial, "id">) {
+  const admin = getWriteClient();
+  if (admin) {
+    const { data, error } = await admin
+      .from("testimonials")
+      .insert(item)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return data;
+  }
+  const content = await getSiteContent();
+  const newItem: Testimonial = { ...item, id: `tst-${Date.now()}` };
+  content.testimonials.push(newItem);
+  await writeJson(DATA_FILE, content);
+  return newItem;
+}
+
+export async function updateTestimonial(id: string, data: Partial<Testimonial>) {
+  const admin = getWriteClient();
+  if (admin) {
+    const { data: updated, error } = await admin
+      .from("testimonials")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return updated;
+  }
+  const content = await getSiteContent();
+  const index = content.testimonials.findIndex((t) => t.id === id);
+  if (index === -1) return null;
+  content.testimonials[index] = { ...content.testimonials[index], ...data };
+  await writeJson(DATA_FILE, content);
+  return content.testimonials[index];
+}
+
+export async function deleteTestimonial(id: string) {
+  const admin = getWriteClient();
+  if (admin) {
+    const { error } = await admin.from("testimonials").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+    return;
+  }
+  const content = await getSiteContent();
+  content.testimonials = content.testimonials.filter((t) => t.id !== id);
+  await writeJson(DATA_FILE, content);
+}
+
+// Keep batch-update for backward compat
 export async function updateTestimonials(testimonials: Testimonial[]) {
-  const supabase = await getSupabase();
-  if (supabase) {
-    await supabase.from("testimonials").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    const formatted = testimonials.map(({ id, ...rest }) => {
+  const admin = getWriteClient();
+  if (admin) {
+    const rows = testimonials.map(({ id, ...rest }) => {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
-      return isUuid ? { id, ...rest } : rest;
+      return isUuid ? { id, ...rest } : { ...rest };
     });
-    const { data } = await supabase.from("testimonials").insert(formatted).select();
+    const { error: delError } = await admin
+      .from("testimonials")
+      .delete()
+      .neq("id", "00000000-0000-0000-0000-000000000000");
+    if (delError) throw new Error(delError.message);
+    const { data, error: insError } = await admin
+      .from("testimonials")
+      .insert(rows)
+      .select();
+    if (insError) throw new Error(insError.message);
     return (data as any) || testimonials;
   }
-
   const content = await getSiteContent();
   content.testimonials = testimonials;
   await writeJson(DATA_FILE, content);
   return testimonials;
 }
 
+// ─── Messages ─────────────────────────────────────────────────────────────────
+
 export async function getMessages(): Promise<ContactMessage[]> {
-  const supabase = await getSupabase();
+  const supabase = await getReadClient();
   if (supabase) {
-    const { data } = await supabase.from("contact_messages").select("*").order("created_at", { ascending: false });
-    return data || [];
+    const { data } = await supabase
+      .from("contact_messages")
+      .select("*")
+      .order("created_at", { ascending: false });
+    return (data as any[]) || [];
   }
   return readJson<ContactMessage[]>(MESSAGES_FILE, []);
 }
@@ -350,12 +508,16 @@ export async function getMessages(): Promise<ContactMessage[]> {
 export async function addMessage(
   msg: Omit<ContactMessage, "id" | "read" | "created_at">
 ) {
-  const supabase = await getSupabase();
-  if (supabase) {
-    const { data } = await supabase.from("contact_messages").insert(msg).select().single();
+  const admin = getWriteClient();
+  if (admin) {
+    const { data, error } = await admin
+      .from("contact_messages")
+      .insert(msg)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
     return data;
   }
-
   const messages = await getMessages();
   const newMsg: ContactMessage = {
     ...msg,
@@ -369,17 +531,17 @@ export async function addMessage(
 }
 
 export async function markMessageRead(id: string) {
-  const supabase = await getSupabase();
-  if (supabase) {
-    const { data } = await supabase
+  const admin = getWriteClient();
+  if (admin) {
+    const { data, error } = await admin
       .from("contact_messages")
       .update({ read: true })
       .eq("id", id)
       .select()
       .single();
+    if (error) throw new Error(error.message);
     return data;
   }
-
   const messages = await getMessages();
   const index = messages.findIndex((m) => m.id === id);
   if (index === -1) return null;
@@ -389,12 +551,12 @@ export async function markMessageRead(id: string) {
 }
 
 export async function deleteMessage(id: string) {
-  const supabase = await getSupabase();
-  if (supabase) {
-    await supabase.from("contact_messages").delete().eq("id", id);
+  const admin = getWriteClient();
+  if (admin) {
+    const { error } = await admin.from("contact_messages").delete().eq("id", id);
+    if (error) throw new Error(error.message);
     return;
   }
-
   const messages = (await getMessages()).filter((m) => m.id !== id);
   await writeJson(MESSAGES_FILE, messages);
 }
