@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { getSiteContent } from "@/lib/data/store";
 

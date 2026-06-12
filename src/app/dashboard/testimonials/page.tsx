@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { TestimonialsManager } from "@/components/dashboard/testimonials-manager";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { DemoBanner } from "@/components/dashboard/demo-banner";

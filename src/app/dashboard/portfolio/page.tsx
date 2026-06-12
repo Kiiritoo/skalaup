@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PortfolioManager } from "@/components/dashboard/portfolio-manager";
 import { DemoBanner } from "@/components/dashboard/demo-banner";

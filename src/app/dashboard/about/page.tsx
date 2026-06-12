@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ContentForm } from "@/components/dashboard/content-form";
 import { DemoBanner } from "@/components/dashboard/demo-banner";

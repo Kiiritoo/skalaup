@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { MessagesManager } from "@/components/dashboard/messages-manager";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { DemoBanner } from "@/components/dashboard/demo-banner";

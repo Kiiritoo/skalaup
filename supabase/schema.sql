@@ -49,6 +49,9 @@ CREATE TABLE IF NOT EXISTS service_items (
   description TEXT NOT NULL DEFAULT '',
   icon TEXT DEFAULT 'sparkles',
   price_starting TEXT DEFAULT '',
+  price_original TEXT DEFAULT '',
+  discount_label TEXT DEFAULT '',
+  discount_expires TEXT DEFAULT '',
   featured BOOLEAN DEFAULT FALSE,
   "order" INTEGER DEFAULT 0
 );
