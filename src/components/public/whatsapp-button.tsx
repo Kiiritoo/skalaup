@@ -16,7 +16,7 @@ export function WhatsAppButton({
 }: WhatsAppButtonProps) {
   // Strip non-digit chars and normalize the number
   const normalized = phone.replace(/\D/g, "").replace(/^0/, "62");
-  const finalMessage = message || "Halo! Saya tertarik dengan layanan StudioWave. Boleh saya tanya-tanya?";
+  const finalMessage = message || "Halo! Saya tertarik dengan layanan Skala Up. Boleh saya tanya-tanya?";
   const finalLabel = label || "Hubungi Kami";
   const encodedMsg = encodeURIComponent(finalMessage);
   const waUrl = `https://wa.me/${normalized}?text=${encodedMsg}`;
