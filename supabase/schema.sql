@@ -66,6 +66,8 @@ CREATE TABLE IF NOT EXISTS contact_info (
   social_linkedin TEXT DEFAULT '',
   social_twitter TEXT DEFAULT '',
   social_github TEXT DEFAULT '',
+  whatsapp_text TEXT DEFAULT 'Hubungi Kami',
+  whatsapp_message TEXT DEFAULT 'Halo StudioWave, saya tertarik untuk berkonsultasi mengenai layanan Anda.',
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -178,8 +180,8 @@ INSERT INTO about_content (title, description, skills, experience_years)
 SELECT 'Tentang Kami', 'Kami adalah tim kreatif yang passionate soal desain dan teknologi. Sejak 2020, kami sudah bantu puluhan brand dan kreator punya presence digital yang memorable.', ARRAY['Web Design', 'UI/UX', 'Branding', 'Development', 'SEO'], 5
 WHERE NOT EXISTS (SELECT 1 FROM about_content);
 
-INSERT INTO contact_info (email, phone, address, social_instagram, social_linkedin)
-SELECT 'hello@studiowave.id', '+62 812-3456-7890', 'Jakarta, Indonesia', 'https://instagram.com/studiowave', 'https://linkedin.com/company/studiowave'
+INSERT INTO contact_info (email, phone, address, social_instagram, social_linkedin, whatsapp_text, whatsapp_message)
+SELECT 'hello@studiowave.id', '+62 812-3456-7890', 'Jakarta, Indonesia', 'https://instagram.com/studiowave', 'https://linkedin.com/company/studiowave', 'Hubungi Kami', 'Halo StudioWave, saya tertarik untuk berkonsultasi mengenai layanan Anda.'
 WHERE NOT EXISTS (SELECT 1 FROM contact_info);
 
 INSERT INTO site_settings (site_name, site_tagline, primary_color)
@@ -190,6 +192,10 @@ WHERE NOT EXISTS (SELECT 1 FROM site_settings);
 ALTER TABLE service_items ADD COLUMN IF NOT EXISTS price_original TEXT DEFAULT '';
 ALTER TABLE service_items ADD COLUMN IF NOT EXISTS discount_label TEXT DEFAULT '';
 ALTER TABLE service_items ADD COLUMN IF NOT EXISTS discount_expires TEXT DEFAULT '';
+
+-- Add WhatsApp columns to contact_info if they don't exist yet (safe migration)
+ALTER TABLE contact_info ADD COLUMN IF NOT EXISTS whatsapp_text TEXT DEFAULT 'Hubungi Kami';
+ALTER TABLE contact_info ADD COLUMN IF NOT EXISTS whatsapp_message TEXT DEFAULT 'Halo Skala Up, saya tertarik untuk berkonsultasi mengenai layanan Anda.';
 
 INSERT INTO service_items (title, description, icon, price_starting, price_original, discount_label, discount_expires, featured, "order")
 SELECT * FROM (VALUES

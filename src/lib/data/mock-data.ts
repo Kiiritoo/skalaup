@@ -139,6 +139,8 @@ export const defaultSiteContent: SiteContent = {
     social_linkedin: "https://linkedin.com/company/studiowave",
     social_twitter: "https://twitter.com/studiowave",
     social_github: "https://github.com/studiowave",
+    whatsapp_text: "Hubungi Kami",
+    whatsapp_message: "Halo StudioWave, saya tertarik untuk berkonsultasi mengenai layanan Anda.",
     updated_at: new Date().toISOString(),
   },
   testimonials: [

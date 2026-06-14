@@ -21,7 +21,11 @@ export default async function PublicLayout({
         tagline={content.settings.site_tagline}
         contact={content.contact}
       />
-      <WhatsAppButton phone={content.contact.phone} />
+      <WhatsAppButton
+        phone={content.contact.phone}
+        message={content.contact.whatsapp_message}
+        label={content.contact.whatsapp_text}
+      />
     </>
   );
 }

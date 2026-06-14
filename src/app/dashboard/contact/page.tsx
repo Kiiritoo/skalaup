@@ -26,6 +26,8 @@ export default async function ContactDashboardPage() {
           social_linkedin: content.contact.social_linkedin,
           social_twitter: content.contact.social_twitter,
           social_github: content.contact.social_github,
+          whatsapp_text: content.contact.whatsapp_text ?? "Hubungi Kami",
+          whatsapp_message: content.contact.whatsapp_message ?? "Halo StudioWave, saya tertarik untuk berkonsultasi mengenai layanan Anda.",
         }}
         fields={[
           { name: "email", label: "Email", type: "email" },
@@ -35,6 +37,8 @@ export default async function ContactDashboardPage() {
           { name: "social_linkedin", label: "LinkedIn URL", type: "url" },
           { name: "social_twitter", label: "Twitter URL", type: "url" },
           { name: "social_github", label: "GitHub URL", type: "url" },
+          { name: "whatsapp_text", label: "Teks Tombol WhatsApp", type: "text" },
+          { name: "whatsapp_message", label: "Pesan Awal Chat WhatsApp", type: "textarea" },
         ]}
       />
     </>

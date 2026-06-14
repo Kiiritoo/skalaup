@@ -54,6 +54,8 @@ export interface ContactInfo {
   social_linkedin: string;
   social_twitter: string;
   social_github: string;
+  whatsapp_text: string;      // Label on floating button, e.g. "Hubungi Kami"
+  whatsapp_message: string;   // Pre-filled WA message
   updated_at: string;
 }
 
